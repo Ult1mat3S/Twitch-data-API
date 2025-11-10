@@ -1,0 +1,31 @@
+{
+  "timestamp": 1762753138791,
+  "data": {
+    "data": [
+      {
+        "id": "315801541982",
+        "user_id": "71092938",
+        "user_login": "xqc",
+        "user_name": "xQc",
+        "game_id": "464339927",
+        "game_name": "ARC Raiders",
+        "type": "live",
+        "title": "😈LIVE😈HERE😈OOOO😈DRAMA😈NEWS😈THINGS😈VIDEOS😈GAMES😈STUFF😈YAY😈CLICK😈IN😈LOCK😈IN😈FKJHWIUELFYHEIUYH😈IM HERE😈8547850734895389😈",
+        "viewer_count": 21021,
+        "started_at": "2025-11-09T21:21:59Z",
+        "language": "en",
+        "thumbnail_url": "https://static-cdn.jtvnw.net/previews-ttv/live_user_xqc-{width}x{height}.jpg",
+        "tag_ids": [],
+        "tags": [
+          "English",
+          "femboy",
+          "DropsEnabled"
+        ],
+        "is_mature": false
+      }
+    ],
+    "pagination": {
+      "cursor": "eyJiIjp7IkN1cnNvciI6ImV5SnpJam95TVRBeU1TNDVORFF3TVRVME1ESTFOalVzSW1RaU9tWmhiSE5sTENKMElqcDBjblZsZlE9PSJ9LCJhIjp7IkN1cnNvciI6IiJ9fQ"
+    }
+  }
+}

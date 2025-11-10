@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Twitch data API</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #0e0e10;
+        color: #fafafa;
+        text-align: center;
+        padding: 3rem;
+      }
+      h1 {
+        color: #9146ff;
+      }
+      input {
+        padding: 0.6rem 1rem;
+        font-size: 1rem;
+        border-radius: 0.5rem;
+        border: none;
+        width: 250px;
+        outline: none;
+      }
+      button {
+        margin-left: 0.5rem;
+        padding: 0.6rem 1rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: #9146ff;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #772ce8;
+      }
+      #result {
+        margin-top: 2rem;
+        font-size: 1.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Status</h1>
+    <input id="username" type="text" placeholder="Enter streamer name" />
+    <button onclick="checkLive()">Check</button>
+    <div id="result"></div>
+
+    <script>
+      async function checkLive() {
+        const user = document.getElementById("username").value.trim();
+        const resultDiv = document.getElementById("result");
+
+        if (!user) {
+          resultDiv.textContent = "Please enter a username.";
+          return;
+        }
+
+        resultDiv.textContent = "Checking...";
+
+        try {
+          const res = await fetch(`/api/stream?user=${user}`);
+          const json = await res.json();
+          const stream = json.data?.data?.[0];
+
+          if (stream) {
+            resultDiv.innerHTML = `
+            ✅ <strong>${user}</strong> is LIVE!<br>
+            <em>${stream.title}</em><br>
+            Playing: ${stream.game_name}<br>
+            Viewers: ${stream.viewer_count.toLocaleString()}
+          `;
+          } else {
+            resultDiv.innerHTML = `<strong>${user}</strong> is offline. Raw: ${stream}`;
+          }
+        } catch (err) {
+          resultDiv.textContent = "Error fetching data.";
+          console.error(err);
+        }
+      }
+    </script>
+  </body>
+</html>
