@@ -71,9 +71,11 @@
             <em>${stream.title}</em><br>
             Playing: ${stream.game_name}<br>
             Viewers: ${stream.viewer_count.toLocaleString()}
+            <br>
+            Raw: ${stream}
           `;
           } else {
-            resultDiv.innerHTML = `<strong>${user}</strong> is offline. Raw: ${stream}`;
+            resultDiv.innerHTML = `<strong>${user}</strong> is offline. `;
           }
         } catch (err) {
           resultDiv.textContent = "Error fetching data.";
