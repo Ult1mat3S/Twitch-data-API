@@ -2,7 +2,7 @@ let accessToken = process.env.ACCESS_TOKEN;
 const clientId = process.env.CLIENT_ID;
 const refreshToken = process.env.REFRESH_TOKEN;
 
-// In-memory cache (works only per cold start)
+// In-memory cache (works per cold start)
 const cache = new Map();
 const CACHE_DURATION = 60 * 1000; // 1 minute
 
@@ -10,10 +10,15 @@ async function refreshAccessToken() {
   console.log("Refreshing Twitch token...");
   const url = `https://twitchtokengenerator.com/api/refresh/${refreshToken}`;
   const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new Error(`Failed to refresh token: ${res.status}`);
+  }
+
   const data = await res.json();
 
   if (!data || !data.token) {
-    console.error("Failed to refresh token:", data);
+    console.error("Invalid refresh response:", data);
     throw new Error("Token refresh failed");
   }
 
@@ -22,7 +27,28 @@ async function refreshAccessToken() {
   return accessToken;
 }
 
-// Handler
+async function fetchStreamData(user) {
+  const response = await fetch(`https://api.twitch.tv/helix/streams?user_login=${user}`, {
+    headers: {
+      "Client-ID": clientId,
+      "Authorization": `Bearer ${accessToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    console.log("Access token expired, refreshing...");
+    await refreshAccessToken();
+    return fetchStreamData(user);
+  }
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Twitch API error: ${errText}`);
+  }
+
+  return response.json();
+}
+
 export default async function handler(req, res) {
   const { user } = req.query;
   if (!user) return res.status(400).json({ error: "Missing ?user=<twitch_name>" });
@@ -40,30 +66,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ cached: true, is_live: isLive, data });
   }
 
-  async function fetchStreamData() {
-    const response = await fetch(`https://api.twitch.tv/helix/streams?user_login=${user}`, {
-      headers: {
-        "Client-ID": clientId,
-        "Authorization": `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.status === 401) {
-      await refreshAccessToken();
-      return fetchStreamData();
-    }
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error);
-    }
-
-    return response.json();
-  }
-
   try {
-    const data = await fetchStreamData();
+    const data = await fetchStreamData(user);
     const isLive = Array.isArray(data.data) && data.data.length > 0;
+
     cache.set(cacheKey, { data, timestamp: now });
 
     res.status(200).json({ cached: false, is_live: isLive, data });
