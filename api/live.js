@@ -4,10 +4,10 @@ let accessToken = process.env.ACCESS_TOKEN;
 const clientId = process.env.CLIENT_ID;
 const refreshToken = process.env.REFRESH_TOKEN;
 
+// In-memory cache (works only per cold start)
 const cache = new Map();
 const CACHE_DURATION = 60 * 1000; // 1 minute
 
-// Refresh Twitch token using TwitchTokenGenerator
 async function refreshAccessToken() {
   console.log("Refreshing Twitch token...");
   const url = `https://twitchtokengenerator.com/api/refresh/${refreshToken}`;
@@ -24,6 +24,7 @@ async function refreshAccessToken() {
   return accessToken;
 }
 
+// Handler
 export default async function handler(req, res) {
   const { user } = req.query;
   if (!user) return res.status(400).json({ error: "Missing ?user=<twitch_name>" });
@@ -31,12 +32,14 @@ export default async function handler(req, res) {
   const cacheKey = user.toLowerCase();
   const now = Date.now();
 
-  // Serve cached data if valid
+  for (const [key, { timestamp }] of cache.entries()) {
+    if (now - timestamp > CACHE_DURATION) cache.delete(key);
+  }
+
   if (cache.has(cacheKey)) {
-    const { data, timestamp } = cache.get(cacheKey);
-    if (now - timestamp < CACHE_DURATION) {
-      return res.status(200).json({ cached: true, data });
-    }
+    const { data } = cache.get(cacheKey);
+    const isLive = Array.isArray(data.data) && data.data.length > 0;
+    return res.status(200).json({ cached: true, is_live: isLive, data });
   }
 
   async function fetchStreamData() {
@@ -47,10 +50,8 @@ export default async function handler(req, res) {
       },
     });
 
-    // If token is invalid or expired, refresh it
     if (response.status === 401) {
       await refreshAccessToken();
-      // Retry once after refresh
       return fetchStreamData();
     }
 
@@ -64,10 +65,19 @@ export default async function handler(req, res) {
 
   try {
     const data = await fetchStreamData();
+    const isLive = Array.isArray(data.data) && data.data.length > 0;
     cache.set(cacheKey, { data, timestamp: now });
-    res.status(200).json({ cached: false, data });
+
+    res.status(200).json({ cached: false, is_live: isLive, data });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch Twitch data" });
+    console.error("Failed to fetch Twitch data:", err);
+
+    if (cache.has(cacheKey)) {
+      const { data } = cache.get(cacheKey);
+      const isLive = Array.isArray(data.data) && data.data.length > 0;
+      return res.status(200).json({ cached: true, is_live: isLive, data, warning: "Using cached data due to error" });
+    }
+
+    res.status(500).json({ is_live: false, error: "Failed to fetch Twitch data" });
   }
 }
