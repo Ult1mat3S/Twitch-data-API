@@ -1,11 +1,8 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/live.js", "use": "@vercel/node" },
+    { "src": "api/stream.js", "use": "@vercel/node" },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/live.js" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
-  ]
+  "routes": [{ "src": "/(.*)", "dest": "/public/index.html" }]
 }
