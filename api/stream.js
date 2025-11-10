@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 let accessToken = process.env.ACCESS_TOKEN;
 const clientId = process.env.CLIENT_ID;
 const refreshToken = process.env.REFRESH_TOKEN;
