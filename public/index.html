@@ -4,43 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Twitch data API</title>
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        background: #0e0e10;
-        color: #fafafa;
-        text-align: center;
-        padding: 3rem;
-      }
-      h1 {
-        color: #9146ff;
-      }
-      input {
-        padding: 0.6rem 1rem;
-        font-size: 1rem;
-        border-radius: 0.5rem;
-        border: none;
-        width: 250px;
-        outline: none;
-      }
-      button {
-        margin-left: 0.5rem;
-        padding: 0.6rem 1rem;
-        font-size: 1rem;
-        border: none;
-        border-radius: 0.5rem;
-        background: #9146ff;
-        color: white;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #772ce8;
-      }
-      #result {
-        margin-top: 2rem;
-        font-size: 1.2rem;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <h1>Status</h1>
@@ -64,23 +28,38 @@
           const res = await fetch(`/api/stream?user=${user}`);
           const json = await res.json();
           const stream = json.data?.data?.[0];
+          const isLive = !!stream;
 
-          if (stream) {
-            resultDiv.innerHTML = `
-            ✅ <strong>${user}</strong> is LIVE!<br>
-            <em>${stream.title}</em><br>
-            Playing: ${stream.game_name}<br>
-            Viewers: ${stream.viewer_count.toLocaleString()}
-            <br>
-            Raw: ${stream}
-          `;
+          let infoHTML = "";
+
+          if (isLive) {
+            infoHTML = `
+          ✅ <strong>${user}</strong> is LIVE!<br>
+          <em>${stream.title}</em><br>
+          Playing: ${stream.game_name}<br>
+          Viewers: ${stream.viewer_count.toLocaleString()}<br>
+        `;
           } else {
-            resultDiv.innerHTML = `<strong>${user}</strong> is offline. `;
+            infoHTML = `
+          ❌ <strong>${user}</strong> is offline.<br>
+        `;
           }
+
+          resultDiv.innerHTML = `
+        ${infoHTML}
+        <button class="toggle-btn" onclick="toggleRaw(this)">Show Raw JSON ▼</button>
+        <pre class="raw hidden">${JSON.stringify(json, null, 2)}</pre>
+      `;
         } catch (err) {
           resultDiv.textContent = "Error fetching data.";
           console.error(err);
         }
+      }
+
+      function toggleRaw(button) {
+        const pre = button.nextElementSibling;
+        const isHidden = pre.classList.toggle("hidden");
+        button.textContent = isHidden ? "Show Raw JSON ▼" : "Hide Raw JSON ▲";
       }
     </script>
   </body>
